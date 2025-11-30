@@ -1,9 +1,11 @@
+# Auth 路由（註冊 / 登入）
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import create_access_token
 from ..extensions import db, bcrypt
 from ..models import User
 
 auth_bp = Blueprint("auth", __name__)
+
 
 @auth_bp.route("/register", methods=["POST"])
 def register():
@@ -41,14 +43,14 @@ def login():
     if not user or not bcrypt.check_password_hash(user.password_hash, password):
         return jsonify({"message": "帳號或密碼錯誤"}), 401
 
-    access_token = create_access_token(identity=user.id)
+    # ✅ 使用 user.user_id，且轉成字串，避免「Subject must be a string」
+    access_token = create_access_token(identity=str(user.user_id))
 
     return jsonify({
         "access_token": access_token,
         "user": {
-            "id": user.id,
+            "id": user.user_id,      # 回傳給前端的 id 也用 user_id
             "email": user.email,
-            "username": user.username
-        }
+            "username": user.username,
+        },
     }), 200
-
